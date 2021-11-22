@@ -3,7 +3,7 @@ import pandas as pd
 from calendar import monthrange
 import matplotlib.pyplot as plt
 
-df = pd.read_csv('chuvas_C_01036013.csv', header=8, sep=';', index_col=False, on_bad_lines='warn', decimal=',')
+df = pd.read_csv('Chuvas_Coruripe/chuvas_C_01036013.csv', header=8, sep=';', index_col=False, decimal=',')
 
 
 def dados_chuvas(dataframe):
@@ -37,14 +37,14 @@ def organize_data_rain(dataframe_rain):
 
 data_final = organize_data_rain(data_rain)
 
+# Criação do dataframe para visulização dos gráficos
 data_final_reduced = data_final.copy()
 data_final_reduced = data_final_reduced.reset_index()
 data_final_reduced = data_final_reduced.drop(columns='consistency')
 data_final_reduced = data_final_reduced.set_index('date')
 
-# opcao = input('Digite o ano de chuvas de deseja visualizar: ')
+# Vizulização dos gráficos
+opcao = input('Digite o ano de chuvas que deseja visualizar: ')
 
-# data_final_reduced.loc[opcao].plot()
-# plt.show()
-
-
+data_final_reduced.loc[opcao].plot()
+plt.show()
