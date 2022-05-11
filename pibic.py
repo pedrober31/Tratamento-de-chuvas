@@ -1,21 +1,22 @@
-import pandas as pd
-import geopandas as gpd
+from plotly.offline import iplot
 from shapely.geometry import Point
-import matplotlib.pyplot as plt
+import geopandas as gpd
+import pandas as pd
+import hydrobr
 
-def affected_Stations(filename_otto, filename_res, type=1):
+def affected_Stations(filename_otto, filename_res, type = 1):
     """
-    filename_otto: Caminho do arquivo shp contendo as minibacias;
-    filename_res: Caminho do arquivo shp contendo os reservatórios;
-    type: type = 1 localiza as estações pluviométricas e type = 2 as estações fluviométricas.
+    filename_otto: Path of the shp file containing the mini-basins;
+    filename_res: Path of the shp file containing the reservoirs;
+    type: type = 1 locates the rainfall stations and type = 2 the fluviometric stations.
     """
     # Ler shape de minibacias e reservatórios
     gdf_ach = gpd.read_file(filename_otto)
     gdf_res = gpd.read_file(filename_res)
 
-    # Tratamento do geodataframe e intersecção do reservatório com as respcetivas minibacias
+    # Tratamento do geodataframe e intersecção do reservatório com as respectivas minibacias
     gdf_res.index = gdf_res['NM_RESERV']
-    reservatorio = gdf_res.loc['Sumé', 'geometry']
+    reservatorio = gdf_res.loc['Eng. Armando Ribeiro Gonçalves', 'geometry']
     minibacia_res = gdf_ach[gdf_ach.intersects(reservatorio)]
     bacia_res = gdf_ach[gdf_ach['cocursodag'].str.startswith(minibacia_res.cocursodag.values[0], na=False)]
     bacia_res = bacia_res[bacia_res['cobacia'] >= minibacia_res.cobacia.values[0]]
@@ -41,4 +42,44 @@ def affected_Stations(filename_otto, filename_res, type=1):
 
     return estacoes_afetadas
 
-# estacoes_afetadas.to_file(r'C:\Users\pedro\OneDrive\Documentos\UFAL\PIBIC\Estações afetadas\estações_afetadas.shp')
+# Retornar as estações afetadas e gerar um sph do mesmo
+# resultado = affected_Stations(r'Bacia Otto\ach_2017_5k.shp', 'Reservatorios_do_Semiarido_Brasileiro\Reservatorios_do_Semiarido_Brasileiro.shp', 2)
+# resultado.to_file(r'C:\Users\pedro\Documents\UFAL\PIBIC\Estações_afetadas\estacoes_afetadas.shp')
+
+class Flow(object):
+    """
+    class to obtain data from past stations in list form: station data and station flows.
+    In addition to a visualization of data availability with gantt chart
+    """
+    def __init__(self, list_st=[]):
+        self.list_st = list_st
+
+    def track_back(self):
+        """
+        Track back stations datas
+        """
+        self.flow_st = hydrobr.get_data.ANA.list_flow_stations()
+        self.flow_st.loc[self.flow_st['Code'].isin(self.list_st)]
+        return self.flow_st
+
+    def data(self):
+        """
+        Obtain flow datas
+        """
+        self.flow_data = hydrobr.get_data.ANA.flow_data(self.list_st)
+        return self.flow_data
+
+    def gantt(self, width=1000, height=700, titlex='eixo x', titley='eixo y'):
+        """
+        Create html with gantt chart for visualization of data availability
+        """
+        gantt_chart = hydrobr.Plot.gantt(self.flow_data)
+        gantt_chart.update_layout(
+            autosize=False,
+            width=width,
+            height=height,
+            xaxis_title = titlex,
+            yaxis_title = titley,
+            font=dict(family="Courier New, monospace", size=13)
+        )
+        iplot(gantt_chart)
