@@ -1,8 +1,9 @@
-from plotly.offline import iplot
 from shapely.geometry import Point
+from plotly.offline import iplot
 import geopandas as gpd
 import pandas as pd
 import hydrobr
+import os
 
 def affected_Stations(filename_otto, filename_res, type = 1):
     """
@@ -43,10 +44,12 @@ def affected_Stations(filename_otto, filename_res, type = 1):
     return estacoes_afetadas
 
 # Retornar as estações afetadas e gerar um sph do mesmo
-# resultado = affected_Stations(r'Bacia Otto\ach_2017_5k.shp', 'Reservatorios_do_Semiarido_Brasileiro\Reservatorios_do_Semiarido_Brasileiro.shp', 2)
-# resultado.to_file(r'C:\Users\pedro\Documents\UFAL\PIBIC\Estações_afetadas\estacoes_afetadas.shp')
+if not os.path.exists('Estações_afetadas'):
+    resultado = affected_Stations(r'Bacia Otto\ach_2017_5k.shp', 'Reservatorios_do_Semiarido_Brasileiro\Reservatorios_do_Semiarido_Brasileiro.shp', 2)
+    resultado.to_file(r'C:\Users\pedro\Documents\UFAL\PIBIC\Estações_afetadas\estacoes_afetadas.shp')
 
-class Flow(object):
+# Criação da classe Flow
+class Flow():
     """
     class to obtain data from past stations in list form: station data and station flows.
     In addition to a visualization of data availability with gantt chart
@@ -59,7 +62,7 @@ class Flow(object):
         Track back stations datas
         """
         self.flow_st = hydrobr.get_data.ANA.list_flow_stations()
-        self.flow_st.loc[self.flow_st['Code'].isin(self.list_st)]
+        self.flow_st = self.flow_st.loc[self.flow_st['Code'].isin(self.list_st)]
         return self.flow_st
 
     def data(self):
@@ -83,3 +86,22 @@ class Flow(object):
             font=dict(family="Courier New, monospace", size=13)
         )
         iplot(gantt_chart)
+
+# Armazenar dados nas variáveis
+flow = Flow(['37220000', '37230000', '37260000'])
+df1 = flow.track_back()
+df2 = flow.data()
+
+# Criar função para cálculo do skewness
+def skew(station):
+    mean = df2[station].mean()
+    median = df2[station].median()
+    return mean / median
+
+# Criar função para cálculo do Qsp
+def qsp(station):
+    mean = media = df2[station].mean()
+    drainage_area = df1[df1['Code'] == station]['DrainageArea']
+    return media / drainage_area
+
+# Criar função que calcula o CVQ
