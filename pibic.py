@@ -86,22 +86,3 @@ class Flow():
             font=dict(family="Courier New, monospace", size=13)
         )
         iplot(gantt_chart)
-
-# Armazenar dados nas variáveis
-flow = Flow(['37220000', '37230000', '37260000'])
-df1 = flow.track_back()
-df2 = flow.data()
-
-# Criar função para cálculo do skewness
-def skew(station):
-    mean = df2[station].mean()
-    median = df2[station].median()
-    return mean / median
-
-# Criar função para cálculo do Qsp
-def qsp(station):
-    mean = media = df2[station].mean()
-    drainage_area = df1[df1['Code'] == station]['DrainageArea']
-    return media / drainage_area
-
-# Criar função que calcula o CVQ
