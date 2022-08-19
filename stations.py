@@ -1,10 +1,14 @@
 from shapely.geometry import Point
 from plotly.offline import iplot
+import matplotlib.pyplot as plt
 import geopandas as gpd
+import shapely.speedups
 import pandas as pd
 import hydrobr
 
-# Função para rastrear estações afetadas
+# Realizar operações espaciais rapidamente
+shapely.speedups.enable()
+
 def affected_Stations(filename_otto, filename_res, name_res, type = 1):
     """
     filename_otto: Path of the shp file containing the mini-basins;
@@ -41,10 +45,10 @@ def affected_Stations(filename_otto, filename_res, name_res, type = 1):
     bacia_res = bacia_res.reset_index()
     bacia_res = bacia_res.drop(columns='index')
     estacoes_afetadas = gpd.sjoin(estacoes_ANA, bacia_res)
+    estacoes_afetadas = estacoes_afetadas[['Name', 'Code', 'Type', 'City', 'State', 'Latitude', 'Longitude', 'geometry']]
 
     return estacoes_afetadas
 
-# Criação da classe Flow
 class Flow():
     """
     class to obtain data from past stations in list form: station data and station flows.
@@ -55,7 +59,7 @@ class Flow():
 
     def track_back(self):
         """
-        Track back stations datas
+        Track back stations
         """
         self.flow_st = hydrobr.get_data.ANA.list_flow_stations()
         self.flow_st = self.flow_st.loc[self.flow_st['Code'].isin(self.list_st)]
@@ -83,8 +87,60 @@ class Flow():
         )
         iplot(gantt_chart)
 
-# Gerar shp de estações afetadas por um reservatório
+def criar_geometria(estado=''):
+    """
+    estado: Estado que as estações desejadas serão filtradas
+    return: Geodataframe contendo a coluna geometry para cada estação
+    """
+    estacoes = hydrobr.get_data.ANA.list_flow_stations(state=estado)
+    estacoes = estacoes[['Name', 'Code', 'Type', 'City', 'State', 'Latitude', 'Longitude']]
+    
+    geometry = [Point(xy) for xy in zip(estacoes['Longitude'], estacoes['Latitude'])]
+    
+    gdf_estacoes = gpd.GeoDataFrame(estacoes, geometry=geometry)
+    
+    return gdf_estacoes
+
+def estacoes_nao_afetadas(caminho_otto, caminho_res, id, tipo_estacao, plotar=False):
+    """
+    caminho_otto: Caminho que contém o shp das ottobacias
+    caminho_res: Caminho que contém o shp dos reservatórios de referência
+    id: ID do reservatório de interesse
+    tipo_estacao: Definir o tipo da estação, tipoo=1 (estação pluviométrica), tipo=2 (estação fluviométrica)
+    plotar: Booleano para definir se o mapa contendo a bacia e as estações será plotado
+    return: Dataframe contendo as estações não afetadas pelo reservatório de referência
+    """
+    reservatorios = gpd.read_file(caminho_res)
+    bacias = gpd.read_file(caminho_otto)
+
+    reservatorio_interesse = reservatorios[reservatorios['ID'] == id]
+    ponto_interesse = reservatorio_interesse['geometry'].to_list()[0]
+
+    bacia_interesse = bacias[bacias.contains(ponto_interesse)]
+    codigo_interesse = bacia_interesse['nunivotto3'].to_list()[0]
+    bacia_interesse = bacias[bacias['nunivotto3'] == codigo_interesse]
+
+    estacoes_fluv = criar_geometria()
+    estacoes_fluv.set_crs(epsg=4674, inplace=True)
+    estacoes_interesse = gpd.sjoin(estacoes_fluv, bacia_interesse)
+    estacoes_interesse = estacoes_interesse[['Name', 'Code', 'Type', 'City', 'State', 'Latitude', 'Longitude', 'geometry']]
+    nome_reservatorio = reservatorios[reservatorios['ID'] == id]['NM_RESERV'].to_list()[0]
+    estacoes_afetadas = affected_Stations(caminho_otto, caminho_res, nome_reservatorio, tipo_estacao)
+    estacoes_nafetadas = estacoes_interesse.loc[list(set(estacoes_interesse.index).difference(set(estacoes_afetadas.index)))]
+
+    if plotar:
+        fig, ax = plt.subplots()
+        bacia_interesse.plot(ax=ax, facecolor='gray')
+        estacoes_afetadas.plot(ax=ax, facecolor='blue')
+        estacoes_nafetadas.plot(ax=ax, facecolor='green')
+        reservatorio_interesse.plot(ax=ax, facecolor='red')
+        plt.legend(['Estações Afetadas', 'Estações Não Afetadas', 'Reservatório'])
+        plt.show()
+
+    return estacoes_nafetadas
+
+# Testes
 # caminho_ottobacias = r"C:\Users\pedro\Documents\Pibic\ach_2017_5k\ach_2017_5k.shp"
 # caminho_reservatorios = r"C:\Users\pedro\Documents\Pibic\Reservatorios_do_Semiarido_Brasileiro\Reservatorios_do_Semiarido_Brasileiro.shp"
-# resultado = affected_Stations(caminho_ottobacias, caminho_reservatorios, "Eng. Armando Ribeiro Gonçalves", 2)
-# resultado.to_file(r'C:\Users\pedro\Documents\Pibic\Estações Afetadas\resultado.shp')
+
+# print(estacoes_nao_afetadas(caminho_ottobacias, caminho_reservatorios, 1421, 2))

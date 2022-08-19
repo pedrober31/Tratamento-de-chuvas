@@ -1,9 +1,13 @@
-from stations import Flow
+from stations import Flow, estacoes_nao_afetadas
 import pandas as pd
 import numpy as np
 import math
 
-lista_estacoes = ['37220000','39770000']
+caminho_ottobacias = r"C:\Users\pedro\Documents\Pibic\ach_2017_5k\ach_2017_5k.shp"
+caminho_reservatorios = r"C:\Users\pedro\Documents\Pibic\Reservatorios_do_Semiarido_Brasileiro\Reservatorios_do_Semiarido_Brasileiro.shp"
+estacoes_nafetadas = estacoes_nao_afetadas(caminho_ottobacias, caminho_reservatorios, 1421, 2)
+
+lista_estacoes = estacoes_nafetadas['Code'].to_list()
 flow = Flow(lista_estacoes)
 df1 = flow.track_back()
 df2 = flow.data()
@@ -58,6 +62,9 @@ class Hydro_Sig():
 
         for ano in vaz_mensal.index.year:
             if vaz_mensal[f"{ano}"].count() == 12:
+                ano_analisado = ano
+                break
+            elif 6 <= vaz_mensal[f"{ano}"].count() < 12:
                 ano_analisado = ano
                 break
         
@@ -128,3 +135,6 @@ def result():
         df.loc['constancy', c] = o_station.constancy()
 
     return df
+
+# Testes
+# print(result())
