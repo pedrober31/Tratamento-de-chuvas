@@ -1,13 +1,14 @@
-from stations import Flow, estacoes_nao_afetadas
+from stations import Flow, not_affected_Stations
 import pandas as pd
 import numpy as np
 import math
 
 caminho_ottobacias = r"C:\Users\pedro\Documents\Pibic\ach_2017_5k\ach_2017_5k.shp"
 caminho_reservatorios = r"C:\Users\pedro\Documents\Pibic\Reservatorios_do_Semiarido_Brasileiro\Reservatorios_do_Semiarido_Brasileiro.shp"
-estacoes_nafetadas = estacoes_nao_afetadas(caminho_ottobacias, caminho_reservatorios, 1421, 2)
+estacoes_nafetadas = not_affected_Stations(caminho_ottobacias, caminho_reservatorios, 'Eng. Armando Ribeiro Gonçalves', 2)
 
 lista_estacoes = estacoes_nafetadas['Code'].to_list()
+lista_estacoes = [str(e) for e in lista_estacoes]
 flow = Flow(lista_estacoes)
 df1 = flow.track_back()
 df2 = flow.data()
@@ -64,7 +65,7 @@ class Hydro_Sig():
             if vaz_mensal[f"{ano}"].count() == 12:
                 ano_analisado = ano
                 break
-            elif 6 <= vaz_mensal[f"{ano}"].count() < 12:
+            elif 3 <= vaz_mensal[f"{ano}"].count() < 12:
                 ano_analisado = ano
                 break
         
@@ -109,7 +110,13 @@ class Hydro_Sig():
             yi = df_const.loc[i].to_list()
             yi = [x for x in yi if np.isnan(x) == False and np.isinf(x) == False]
             yi = sum(yi)
-            hy += (yi / z) * math.log(yi / z)
+            logaritmando = yi / z
+
+            if logaritmando <= 0:
+                logaritmando = 1
+
+            logaritmo = math.log(logaritmando)
+            hy += (yi / z) * logaritmo
 
         hy = -hy
 
@@ -135,6 +142,3 @@ def result():
         df.loc['constancy', c] = o_station.constancy()
 
     return df
-
-# Testes
-# print(result())
