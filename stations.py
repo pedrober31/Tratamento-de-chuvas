@@ -9,7 +9,7 @@ import hydrobr
 # Realizar operações espaciais rapidamente
 shapely.speedups.enable()
 
-def affected_Stations(filename_otto, filename_res, name_res, type = 1):
+def not_affected_Stations(filename_otto, filename_res, name_res, type = 1):
     """
     filename_otto: Path of the shp file containing the mini-basins;
     filename_res: Path of the shp file containing the reservoirs;
@@ -44,10 +44,10 @@ def affected_Stations(filename_otto, filename_res, name_res, type = 1):
     estacoes_ANA = estacoes_ANA.set_crs('epsg:4674')
     bacia_res = bacia_res.reset_index()
     bacia_res = bacia_res.drop(columns='index')
-    estacoes_afetadas = gpd.sjoin(estacoes_ANA, bacia_res)
-    estacoes_afetadas = estacoes_afetadas[['Name', 'Code', 'Type', 'City', 'State', 'Latitude', 'Longitude', 'geometry']]
+    estacoes_nafetadas = gpd.sjoin(estacoes_ANA, bacia_res)
+    estacoes_nafetadas = estacoes_nafetadas[['Name', 'Code', 'Type', 'City', 'State', 'Latitude', 'Longitude', 'geometry']]
 
-    return estacoes_afetadas
+    return estacoes_nafetadas
 
 class Flow():
     """
@@ -101,7 +101,7 @@ def criar_geometria(estado=''):
     
     return gdf_estacoes
 
-def estacoes_nao_afetadas(caminho_otto, caminho_res, id, tipo_estacao, plotar=False):
+def estacoes_afetadas(caminho_otto, caminho_res, id, tipo_estacao, plotar=False):
     """
     caminho_otto: Caminho que contém o shp das ottobacias
     caminho_res: Caminho que contém o shp dos reservatórios de referência
@@ -125,22 +125,16 @@ def estacoes_nao_afetadas(caminho_otto, caminho_res, id, tipo_estacao, plotar=Fa
     estacoes_interesse = gpd.sjoin(estacoes_fluv, bacia_interesse)
     estacoes_interesse = estacoes_interesse[['Name', 'Code', 'Type', 'City', 'State', 'Latitude', 'Longitude', 'geometry']]
     nome_reservatorio = reservatorios[reservatorios['ID'] == id]['NM_RESERV'].to_list()[0]
-    estacoes_afetadas = affected_Stations(caminho_otto, caminho_res, nome_reservatorio, tipo_estacao)
-    estacoes_nafetadas = estacoes_interesse.loc[list(set(estacoes_interesse.index).difference(set(estacoes_afetadas.index)))]
+    estacoes_nafetadas = not_affected_Stations(caminho_otto, caminho_res, nome_reservatorio, tipo_estacao)
+    estacoes_afetadas = estacoes_interesse.loc[list(set(estacoes_interesse.index).difference(set(estacoes_nafetadas.index)))]
 
     if plotar:
         fig, ax = plt.subplots()
         bacia_interesse.plot(ax=ax, facecolor='gray')
-        estacoes_afetadas.plot(ax=ax, facecolor='blue')
-        estacoes_nafetadas.plot(ax=ax, facecolor='green')
+        estacoes_nafetadas.plot(ax=ax, facecolor='blue')
+        estacoes_afetadas.plot(ax=ax, facecolor='green')
         reservatorio_interesse.plot(ax=ax, facecolor='red')
-        plt.legend(['Estações Afetadas', 'Estações Não Afetadas', 'Reservatório'])
+        plt.legend(['Estações Não Afetadas', 'Estações Afetadas', 'Reservatório'])
         plt.show()
 
-    return estacoes_nafetadas
-
-# Testes
-# caminho_ottobacias = r"C:\Users\pedro\Documents\Pibic\ach_2017_5k\ach_2017_5k.shp"
-# caminho_reservatorios = r"C:\Users\pedro\Documents\Pibic\Reservatorios_do_Semiarido_Brasileiro\Reservatorios_do_Semiarido_Brasileiro.shp"
-
-# print(estacoes_nao_afetadas(caminho_ottobacias, caminho_reservatorios, 1421, 2))
+    return estacoes_afetadas
