@@ -35,10 +35,9 @@ def not_affected_Stations(filename_otto, filename_res, name_res, type = 1):
     
     estacoes_ANA = pd.read_csv(url)
     estacoes_ANA = estacoes_ANA.dropna(subset=['Latitude', 'Longitude'])
-    estacoes_ANA['geometry'] = None
+    geometry = [Point(xy) for xy in zip(estacoes_ANA['Longitude'], estacoes_ANA['Latitude'])]
+    estacoes_ANA = gpd.GeoDataFrame(estacoes_ANA, geometry=geometry)
 
-    for index, row in estacoes_ANA.iterrows():
-        estacoes_ANA.loc[index, 'geometry'] = Point(row.Longitude, row.Latitude)
 
     estacoes_ANA = gpd.GeoDataFrame(estacoes_ANA, geometry='geometry')
     estacoes_ANA = estacoes_ANA.set_crs('epsg:4674')
@@ -48,6 +47,11 @@ def not_affected_Stations(filename_otto, filename_res, name_res, type = 1):
     estacoes_nafetadas = estacoes_nafetadas[['Name', 'Code', 'Type', 'City', 'State', 'Latitude', 'Longitude', 'geometry']]
 
     return estacoes_nafetadas
+
+# otto = "/home/pedro/Documents/Data_Pibic/ach_2017_5k/ach_2017_5k.shp"
+# res = "/home/pedro/Documents/Data_Pibic/Reservatorios_do_Semiarido_Brasileiro/Reservatorios_do_Semiarido_Brasileiro.shp"
+# df_resultado = not_affected_Stations(otto, res, 'Eng. Armando Ribeiro Gonçalves', 2)
+# print(df_resultado)
 
 class Flow():
     """
