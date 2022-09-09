@@ -134,7 +134,7 @@ class Hydro_Sig():
         return c
 
 def result():
-    df = pd.DataFrame(index=['Skew', 'qsp', 'cvq', 'bfi', 'q5', 'hfd', 'q95', 'lowfr', 'highfrvar', 'constancy'], columns = [est for est in df2.columns])
+    df = pd.DataFrame(index=['Skew', 'qsp', 'cvq', 'bfi', 'q5', 'hfd', 'q95', 'lowfr', 'highfrvar'], columns = [est for est in df2.columns])
 
     for c in df.columns:
         o_station = Hydro_Sig(c)
