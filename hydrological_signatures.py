@@ -3,15 +3,21 @@ import pandas as pd
 import numpy as np
 import math
 
-caminho_ottobacias = r"C:\Users\pedro\Documents\Pibic\ach_2017_5k\ach_2017_5k.shp"
-caminho_reservatorios = r"C:\Users\pedro\Documents\Pibic\Reservatorios_do_Semiarido_Brasileiro\Reservatorios_do_Semiarido_Brasileiro.shp"
-estacoes_nafetadas = not_affected_Stations(caminho_ottobacias, caminho_reservatorios, 'Eng. Armando Ribeiro Gonçalves', 2)
+otto = "/home/pedro/Documents/Data_Pibic/ach_2017_5k/ach_2017_5k.shp"
+res = "/home/pedro/Documents/Data_Pibic/Reservatorios_do_Semiarido_Brasileiro/Reservatorios_do_Semiarido_Brasileiro.shp"
+estacoes_nafetadas = not_affected_Stations(otto, res, 'Eng. Armando Ribeiro Gonçalves', 2)
 
 lista_estacoes = estacoes_nafetadas['Code'].to_list()
 lista_estacoes = [str(e) for e in lista_estacoes]
 flow = Flow(lista_estacoes)
 df1 = flow.track_back()
 df2 = flow.data()
+
+# Retirar estações que possuem mediana = 0 e as que possuem média > 15000
+for estacao in df2.columns:
+    if df2[estacao].median() == 0 or df2[estacao].mean() > 15000:
+        df2 = df2.drop(columns=estacao)
+
 
 class Hydro_Sig():
 
@@ -33,7 +39,9 @@ class Hydro_Sig():
         return cv
 
     def bfi(self, data=df2):
-        return data[self.station].rolling(7).mean().min() / data[self.station].mean()
+        numerador = data[self.station].rolling(7).mean().min()
+        denominador = data[self.station].mean()
+        return numerador / denominador
 
     def q5(self, data=df2):
         drainage_area = df1[df1['Code'] == self.station]['DrainageArea']
@@ -74,12 +82,12 @@ class Hydro_Sig():
         mes_inicio = vaz_interesse[vaz_interesse == valor_min].index.month[0]
         return mes_inicio
 
-    def constancy(self):
+    def constancy(self):  # don't use, it's wrong
         o_station = Hydro_Sig(self.station)
 
         mes = o_station.hidrological_year()
 
-        df_const = pd.DataFrame(index=['Skew', 'CVQ', 'BFI', 'Q5', 'Q95'], columns=list(set(df2.index.year))[:-1])
+        df_const = pd.DataFrame(index=['Skew','QSP' 'CVQ', 'BFI', 'Q5', 'Q95'], columns=list(set(df2.index.year))[:-1])
 
         for y in df_const.columns:
 
@@ -89,6 +97,7 @@ class Hydro_Sig():
                 df_a = df2.loc[f'{y}-{mes}':f'{y + 1}-{mes - 1}']
 
             df_const.loc["Skew", y] = o_station.skew(data=df_a)
+            df_const.loc['QSP', y] = o_station.qsp()[o_station.qsp().index[0]]
             df_const.loc["CVQ", y] = o_station.cvq(data=df_a)
             df_const.loc["BFI", y] = o_station.bfi(data=df_a)
             df_const.loc["Q5", y] = o_station.q5(data=df_a)
@@ -125,7 +134,7 @@ class Hydro_Sig():
         return c
 
 def result():
-    df = pd.DataFrame(index=['Skew', 'qsp', 'cvq', 'bfi', 'q5', 'hfd', 'q95', 'lowfr', 'highfrvar', 'constancy'], columns = [c for c in lista_estacoes])
+    df = pd.DataFrame(index=['Skew', 'qsp', 'cvq', 'bfi', 'q5', 'hfd', 'q95', 'lowfr', 'highfrvar', 'constancy'], columns = [est for est in df2.columns])
 
     for c in df.columns:
         o_station = Hydro_Sig(c)
@@ -139,6 +148,6 @@ def result():
         df.loc['q95', c] = o_station.q95()
         df.loc['lowfr', c] = o_station.lowfr()
         df.loc['highfrvar', c] = o_station.highfrvar()
-        df.loc['constancy', c] = o_station.constancy()
+        # df.loc['constancy', c] = o_station.constancy()
 
     return df
