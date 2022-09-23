@@ -25,7 +25,7 @@ def not_affected_Stations(filename_otto, filename_res, name_res, type = 1):
     reservatorio = gdf_res.loc[name_res, 'geometry']
     minibacia_res = gdf_ach[gdf_ach.intersects(reservatorio)]
     bacia_res = gdf_ach[gdf_ach['cocursodag'].str.startswith(minibacia_res.cocursodag.values[0], na=False)]
-    bacia_res = bacia_res[bacia_res['cobacia'] >= minibacia_res.cobacia.values[0]]
+    bacia_res = bacia_res[bacia_res['cobacia'] > minibacia_res.cobacia.values[0]]
 
     # Estações pluviométricas/Fluviométricas afetadas
     if type == 1:
@@ -47,11 +47,6 @@ def not_affected_Stations(filename_otto, filename_res, name_res, type = 1):
     estacoes_nafetadas = estacoes_nafetadas[['Name', 'Code', 'Type', 'City', 'State', 'Latitude', 'Longitude', 'geometry']]
 
     return estacoes_nafetadas
-
-# otto = "/home/pedro/Documents/Data_Pibic/ach_2017_5k/ach_2017_5k.shp"
-# res = "/home/pedro/Documents/Data_Pibic/Reservatorios_do_Semiarido_Brasileiro/Reservatorios_do_Semiarido_Brasileiro.shp"
-# df_resultado = not_affected_Stations(otto, res, 'Eng. Armando Ribeiro Gonçalves', 2)
-# print(df_resultado)
 
 class Flow():
     """
@@ -139,6 +134,8 @@ def estacoes_afetadas(caminho_otto, caminho_res, id, tipo_estacao, plotar=False)
         estacoes_afetadas.plot(ax=ax, facecolor='green')
         reservatorio_interesse.plot(ax=ax, facecolor='red')
         plt.legend(['Estações Não Afetadas', 'Estações Afetadas', 'Reservatório'])
+        plt.xlim(-39, -36)
+        plt.ylim(-8, -5)
         plt.show()
 
     return estacoes_afetadas
