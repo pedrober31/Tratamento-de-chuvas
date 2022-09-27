@@ -3,8 +3,8 @@ import pandas as pd
 import numpy as np
 import math
 
-otto = "/home/pedro/Documents/Data_Pibic/ach_2017_5k/ach_2017_5k.shp"
-res = "/home/pedro/Documents/Data_Pibic/Reservatorios_do_Semiarido_Brasileiro/Reservatorios_do_Semiarido_Brasileiro.shp"
+otto = r"C:\Users\pedro\OneDrive\Documentos\Pibic\Dados\ach_2017_5k\ach_2017_5k.shp"
+res = r"C:\Users\pedro\OneDrive\Documentos\Pibic\Dados\Reservatorios_do_Semiarido_Brasileiro\Reservatorios_do_Semiarido_Brasileiro.shp"
 estacoes_nafetadas = not_affected_Stations(otto, res, 'Eng. Armando Ribeiro Gonçalves', 2)
 
 lista_estacoes = estacoes_nafetadas['Code'].to_list()
@@ -15,7 +15,7 @@ df2 = flow.data()
 
 # Retirar estações que possuem mediana = 0 e as que possuem média > 15000
 for estacao in df2.columns:
-    if df2[estacao].median() == 0 or df2[estacao].mean() > 15000:
+    if df2[estacao].mean() == 0 or df2[estacao].mean() > 15000:
         df2 = df2.drop(columns=estacao)
 
 
@@ -24,7 +24,7 @@ class Hydro_Sig():
     def __init__(self, station):
         self.station = station
     
-    def skew(self, data=df2):
+    def skew(self, data=df2):  # Retirar devido a não adequação da área de estudo
         mean = data[self.station].mean()
         median = data[self.station].median()
         return mean / median
@@ -32,7 +32,8 @@ class Hydro_Sig():
     def qsp(self):
         media = df2[self.station].mean()
         drainage_area = df1[df1['Code'] == self.station]['DrainageArea']
-        return media / drainage_area
+        result = media / drainage_area
+        return (result * 86.4)
 
     def cvq(self, data=df2):
         cv = data[self.station].std() / data[self.station].mean()
@@ -46,7 +47,8 @@ class Hydro_Sig():
     def q5(self, data=df2):
         drainage_area = df1[df1['Code'] == self.station]['DrainageArea']
         ef = data[self.station] / drainage_area.values[0]
-        return ef.quantile(q=0.95)
+        result = ef.quantile(q=0.95)
+        return (result * 86.4)
 
     def hfd(self):
         return df2[self.station].quantile(q=0.9) / df2[self.station].mean()
@@ -54,7 +56,8 @@ class Hydro_Sig():
     def q95(self, data=df2):
         drainage_area = df1[df1['Code'] == self.station]['DrainageArea']
         ef = data[self.station] / drainage_area.values[0]
-        return ef.quantile(q=0.05)
+        result = ef.quantile(q=0.05)
+        return (result * 86.4) 
 
     def lowfr(self):
         lim = df2[self.station].mean() * 0.05
@@ -134,12 +137,12 @@ class Hydro_Sig():
         return c
 
 def result():
-    df = pd.DataFrame(index=['Skew', 'qsp', 'cvq', 'bfi', 'q5', 'hfd', 'q95', 'lowfr', 'highfrvar'], columns = [est for est in df2.columns])
+    df = pd.DataFrame(index=['qsp', 'cvq', 'bfi', 'q5', 'hfd', 'q95', 'lowfr', 'highfrvar'], columns = [est for est in df2.columns])
 
     for c in df.columns:
         o_station = Hydro_Sig(c)
         
-        df.loc['Skew', c] = o_station.skew()
+        # df.loc['Skew', c] = o_station.skew()
         df.loc['qsp', c] = o_station.qsp()[o_station.qsp().index[0]]
         df.loc['cvq', c] = o_station.cvq()
         df.loc['bfi', c] = o_station.bfi()
