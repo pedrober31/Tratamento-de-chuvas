@@ -36,7 +36,7 @@ def not_affected_Stations(filename_otto, filename_res, name_res, type = 1):
     estacoes_ANA = pd.read_csv(url)
     estacoes_ANA = estacoes_ANA.dropna(subset=['Latitude', 'Longitude'])
     geometry = [Point(xy) for xy in zip(estacoes_ANA['Longitude'], estacoes_ANA['Latitude'])]
-    estacoes_ANA = gpd.GeoDataFrame(estacoes_ANA, geometry=geometry)
+    estacoes_ANA = gpd.GeoDataFrame(estacoes_ANA, geometry=geometry)  # type: ignore
 
 
     estacoes_ANA = gpd.GeoDataFrame(estacoes_ANA, geometry='geometry')

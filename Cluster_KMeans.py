@@ -6,23 +6,23 @@ import hydrological_signatures
 import geopandas as gpd
 import pandas as pd
 
-# Obtenção da bacia e do trecho de rio de interesse
-caminho_otto = r"C:\Users\pedro\OneDrive\Documentos\Pibic\Dados\ach_2017_5k\ach_2017_5k.shp"
-caminho_res = r"C:\Users\pedro\OneDrive\Documentos\Pibic\Dados\Reservatorios_do_Semiarido_Brasileiro\Reservatorios_do_Semiarido_Brasileiro.shp"
+# # Obtenção da bacia e do trecho de rio de interesse
+# caminho_otto = r"C:\Users\pedro\OneDrive\Documentos\Pibic\Dados\ach_2017_5k\ach_2017_5k.shp"
+# caminho_res = r"C:\Users\pedro\OneDrive\Documentos\Pibic\Dados\Reservatorios_do_Semiarido_Brasileiro\Reservatorios_do_Semiarido_Brasileiro.shp"
 
-reservatorios = gpd.read_file(caminho_res)
-bacias = gpd.read_file(caminho_otto)
+# reservatorios = gpd.read_file(caminho_res)
+# bacias = gpd.read_file(caminho_otto)
 
-reservatorio_interesse = reservatorios[reservatorios['ID'] == 1421]
-ponto_interesse = reservatorio_interesse['geometry'].to_list()[0]
+# reservatorio_interesse = reservatorios[reservatorios['ID'] == 1421]
+# ponto_interesse = reservatorio_interesse['geometry'].to_list()[0]
 
-bacia_interesse = bacias[bacias.contains(ponto_interesse)]
-codigo_interesse = bacia_interesse['nunivotto3'].to_list()[0]
-bacia_interesse = bacias[bacias['nunivotto3'] == codigo_interesse]
+# bacia_interesse = bacias[bacias.contains(ponto_interesse)]
+# codigo_interesse = bacia_interesse['nunivotto3'].to_list()[0]
+# bacia_interesse = bacias[bacias['nunivotto3'] == codigo_interesse]
 
-caminho_trecho = r"C:\Users\pedro\OneDrive\Documentos\Pibic\Dados\Trecho_Intersecção\Trecho_Intersecção.shp"
-trecho_rio = gpd.read_file(caminho_trecho)
-######################################################
+# caminho_trecho = r"C:\Users\pedro\OneDrive\Documentos\Pibic\Dados\Trecho_Intersecção\Trecho_Intersecção.shp"
+# trecho_rio = gpd.read_file(caminho_trecho)
+# ######################################################
 
 df_assinaturas = hydrological_signatures.result()
 df_assinaturas = df_assinaturas.T
@@ -69,24 +69,26 @@ def estacoes_cluster(n_clusters, df):
 
     return gdf_estacoes_k
 
-gdf_estacoes_k = estacoes_cluster(2, df_assinaturas)
+# gdf_estacoes_k = estacoes_cluster(2, df_assinaturas)
 
-# Plotagem
-fig, ax= plt.subplots(figsize=(15, 8))
+# # Plotagem
+# fig, ax= plt.subplots(figsize=(15, 8))
 
-bacia_interesse.plot(ax=ax, facecolor='gray')
-trecho_rio.plot(ax=ax, zorder = 1, color='aqua', alpha=0.7, label='Rio')
+# bacia_interesse.plot(ax=ax, facecolor='gray')
+# trecho_rio.plot(ax=ax, zorder = 1, color='aqua', alpha=0.7, label='Rio')
 
-gdf_estacoes_k[gdf_estacoes_k['Labels'] == 0].plot(ax=ax, label='Grupo 1', color='yellow', edgecolor='k', markersize=55)
-gdf_estacoes_k[gdf_estacoes_k['Labels'] == 1].plot(ax=ax, label='Grupo 2', color='lime', edgecolor='k', markersize=55)
-# gdf_estacoes_k[gdf_estacoes_k['Labels'] == 2].plot(ax=ax, label='Grupo 3', color='magenta', edgecolor='k', markersize=55)
-# gdf_estacoes_k[gdf_estacoes_k['Labels'] == 3].plot(ax=ax, label='Grupo 4', color='blue', edgecolor='k', markersize=55)
+# gdf_estacoes_k[gdf_estacoes_k['Labels'] == 0].plot(ax=ax, label='Grupo 1', color='yellow', edgecolor='k', markersize=55)
+# gdf_estacoes_k[gdf_estacoes_k['Labels'] == 1].plot(ax=ax, label='Grupo 2', color='lime', edgecolor='k', markersize=55)
+# # gdf_estacoes_k[gdf_estacoes_k['Labels'] == 2].plot(ax=ax, label='Grupo 3', color='magenta', edgecolor='k', markersize=55)
+# # gdf_estacoes_k[gdf_estacoes_k['Labels'] == 3].plot(ax=ax, label='Grupo 4', color='blue', edgecolor='k', markersize=55)
 
-reservatorio_interesse.plot(ax=ax, marker="D", color='red', label='Reservatório', edgecolor='k', markersize=60)
+# reservatorio_interesse.plot(ax=ax, marker="D", color='red', label='Reservatório', edgecolor='k', markersize=60)
 
-plt.legend(title='Agrupamentos', loc='upper left')
-plt.xlim(-39, -36)
-plt.ylim(-8, -5)
+# plt.legend(title='Agrupamentos', loc='upper left')
+# plt.xlim(-39, -36)
+# plt.ylim(-8, -5)
 
-plt.show()
-###########
+# plt.show()
+# ###########
+
+print(clustering_kmeans(df_assinaturas))

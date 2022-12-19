@@ -3,8 +3,8 @@ import pandas as pd
 import numpy as np
 import math
 
-otto = r"C:\Users\pedro\OneDrive\Documentos\Pibic\Dados\ach_2017_5k\ach_2017_5k.shp"
-res = r"C:\Users\pedro\OneDrive\Documentos\Pibic\Dados\Reservatorios_do_Semiarido_Brasileiro\Reservatorios_do_Semiarido_Brasileiro.shp"
+otto = r"C:\Users\pedro\Documents\Pibic 21-22\Dados\ach_2017_5k\ach_2017_5k.shp"
+res = r"C:\Users\pedro\Documents\Pibic 21-22\Dados\Reservatorios_do_Semiarido_Brasileiro\Reservatorios_do_Semiarido_Brasileiro.shp"
 estacoes_nafetadas = not_affected_Stations(otto, res, 'Eng. Armando Ribeiro Gonçalves', 2)
 
 lista_estacoes = estacoes_nafetadas['Code'].to_list()
